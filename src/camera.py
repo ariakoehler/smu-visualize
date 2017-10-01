@@ -82,25 +82,28 @@ class Cam:
         projected,_ = cv2.projectPoints(inp, self.rvecs[0], self.tvecs[0], self.mtx, self.dist)
         return [(i[0][0],i[0][1]) for i in projected]
 
-    def rotateX(self,points,theta):
+    def rotateX(self,points,theta,origin=[0.0,0.0,0.0]):
         rotation = np.matrix([[1,0,0],[0,np.cos(theta),np.sin(theta)],[0,-np.sin(theta),np.cos(theta)]])
         ret = []
         for p in points:
-            ret.append(rotation*p.reshape([3,1]))
+            translated = p-np.asarray(origin)
+            ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
-    def rotateY(self,points,theta):
+    def rotateY(self,points,theta,origin=[0.0,0.0,0.0]):
         rotation = np.matrix([[np.cos(theta),0,-np.sin(theta)],[0,1,0],[np.sin(theta),0,np.cos(theta)]])
         ret = []
         for p in points:
-            ret.append(rotation*p.reshape([3,1]))
+            translated = p-np.asarray(origin)
+            ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
-    def rotateZ(self,points,theta):
+    def rotateZ(self,points,theta,origin=[0.0,0.0,0.0]):
         rotation = np.matrix([[np.cos(theta),np.sin(theta),0],[-np.sin(theta),np.cos(theta),0],[0,0,1]])
         ret = []
         for p in points:
-            ret.append(rotation*p.reshape([3,1]))
+            translated = p-np.asarray(origin)
+            ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
 
@@ -117,7 +120,9 @@ def main(cams):
     z = 10-(handData[0][2])/10.0
     for ii in range(1):
         vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
-        #vertices = cams[ii].rotateX(vertices,cams[ii].t)
+        if handData[1][0] != 0:
+            #vertices = cams[ii].rotateX(vertices,-np.arccos(handData[1][1]/np.linalg.norm(handData[1])),[x,y,z])
+            vertices = cams[ii].rotateY(vertices,-np.arctan(handData[1][2]/handData[1][0]),[x,y,z])
         #vertices = cams[ii].rotateY(vertices,cams[ii].t)
         #vertices = cams[ii].rotateZ(vertices,cams[ii].t)
         for i in vertices:
