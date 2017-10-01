@@ -106,6 +106,12 @@ class Cam:
             ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
+    def newBasis(self,vertices,basis):
+        ret = []
+        for i in vertices:
+            ret.append(basis*i.reshape([3,1]))
+        return ret
+
 
 def main(cams):
     img = [0,0]
@@ -113,18 +119,14 @@ def main(cams):
     #img[1] = cams[1].getFrame()
 
     #Draw a cube
-    handData = cams[0].listener.get_hand_data()
-    #print(handData)
-    x = 3+(handData[0][0])/10.0
-    y = 10-(handData[0][1])/10.0
-    z = 10-(handData[0][2])/10.0
+    origin,basis = cams[0].listener.get_hand_data()
+
+    x = 3+(origin[0]/10.0)
+    y = 10-(origin[1]/10.0)
+    z = 10-(origin[2]/10.0)
     for ii in range(1):
         vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
-        if handData[1][0] != 0:
-            #vertices = cams[ii].rotateX(vertices,-np.arccos(handData[1][1]/np.linalg.norm(handData[1])),[x,y,z])
-            vertices = cams[ii].rotateY(vertices,-np.arctan(handData[1][2]/handData[1][0]),[x,y,z])
-        #vertices = cams[ii].rotateY(vertices,cams[ii].t)
-        #vertices = cams[ii].rotateZ(vertices,cams[ii].t)
+        vertices = cams[ii].newBasis(vertices,basis)
         for i in vertices:
             for j in vertices:
                 aLine = cams[ii].project([i,j])
