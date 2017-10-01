@@ -112,8 +112,9 @@ class Cam:
         basis = np.matrix(basis).transpose()
         origin = np.asarray(origin).reshape([3,1])
         for i in range(len(vertices)):
-            scale = float(np.dot(np.asarray(vertices[i]), basis[:,i]))/float(np.dot(basis[:,i].transpose(), basis[:,i]))
-            ret.append(scale * basis[:,i])
+            for j in range(size(basis[0])):
+                scale = float(np.dot(np.asarray(vertices[i]), basis))/float(np.dot(basis[:,i].transpose(), basis[:,i]))
+                ret.append(scale * basis[:,i])
         return np.array(ret)
 
     def drawLine(self,surface,vertices,color,thickness=1,closed=0):
@@ -138,23 +139,50 @@ def main(cams):
     #Draw a cube
     origin,basis = cams[0].listener.get_hand_data()
 
-    x = -(origin[0]/10.0)
-    y = (origin[2]/10.0)
-    z = (origin[1]/10.0)-20
-    for ii in range(1):
-        #vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
-        #vertices = cams[ii].newBasis(vertices,basis,origin)
+    if origin != (0,0,0):
 
-        try:
-            #Draw axes
-            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x-2,y,z],[x+2,y,z]],basis,origin),(0,0,255),1,1)
-            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y-2,z],[x,y+2,z]],basis,origin),(0,255,0),1,1)
-            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y,z-2],[x,y,z+2]],basis,origin),(255,0,0),1,1)
+        x = -(origin[0]/10.0)
+        y = (origin[2]/10.0)+10
+        z = (origin[1]/10.0)-20
+        for ii in range(1):
+            #vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
+            #vertices = cams[ii].newBasis(vertices,basis,origin)
 
-            #Draw some lines or something
-            cams[ii].plot(img[ii],[x,y,z],[0,1,2],[0,1,2],[0,1,2],(255,0,255))
-        except OverflowError:
-            print "oh shit"
+            try:
+                #Draw axes
+                #xaxis = cams[ii].newBasis([[x-2,y,z],[x+2,y,z]],basis,origin)
+                s = 5
+                xaxis = [[x-s,y,z],[x+s,y,z]]
+                xaxis = cams[ii].rotateY(xaxis,-np.arctan(basis[1][1]/basis[1][0]),[x,y,z])
+                yaxis = [[x,y-s,z],[x,y+s,z]]
+                yaxis = cams[ii].rotateY(yaxis,-np.arctan(basis[1][1]/basis[1][0]),[x,y,z])
+                zaxis = [[x,y,z-s],[x,y,z+s]]
+                zaxis = cams[ii].rotateY(zaxis,-np.arctan(basis[1][1]/basis[1][0]),[x,y,z])
+                cams[ii].drawLine(img[ii],xaxis,(0,0,255),1,1)
+                cams[ii].drawLine(img[ii],yaxis,(0,255,0),1,1)
+                cams[ii].drawLine(img[ii],zaxis,(255,0,0),1,1)
+
+                #Draw some lines or something
+                t = np.linspace(0,5,500)
+                x_plot = t * np.cos(t)
+                y_plot = t * np.sin(t)
+                z_plot = t
+
+                vertices = [[x_plot[i]+x,-z_plot[i]+y,-y_plot[i]+z] for i in range(len(x_plot))]
+                vertices = np.array(cams[ii].rotateY(vertices,-np.arctan(basis[2][2]/basis[2][0]),[x,y,z]))
+
+                x_plot = vertices[:,0,0]
+                y_plot = vertices[:,0,1]
+                z_plot = vertices[:,0,2]
+
+                cams[ii].plot(img[ii],[x,y,z], x_plot, z_plot, y_plot,(255,0,255))
+
+                #cams[ii].drawLine(img[ii],vertices,(255,0,255),1,0)
+            
+                # cams[ii].plot(img[ii],[x,y,z],[0,3,2],[-2,3,-1],[-3,2,1],(255,0,255))
+                # cams[ii].plot(img[ii],[x,y,z],[0,1,2],[0,-1,2],[0,1,-2],(255,255,255))
+            except OverflowError:
+                print "oh shit"
 
     s = int(cams[0].h*(8.0/9.0))
     cams[0].canvas[:,:s] = img[0][:,:s]
