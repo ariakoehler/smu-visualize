@@ -110,10 +110,11 @@ def main(cams):
     #img[1] = cams[1].getFrame()
 
     #Draw a cube
-    print(cams[0].listener.get_hand_data())
-    x = 0
-    y = 0
-    z = 0
+    handData = cams[0].listener.get_hand_data()
+    #print(handData)
+    x = 3+(handData[0][0])/10.0
+    y = 10-(handData[0][1])/10.0
+    z = 10-(handData[0][2])/10.0
     for ii in range(1):
         vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
         #vertices = cams[ii].rotateX(vertices,cams[ii].t)
