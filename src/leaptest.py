@@ -29,10 +29,15 @@ class SampleListener(Leap.Listener):
             self.recent_hand = handlist[0].id
             
     def get_hand_data(self):
-        if self.recent_frame is not None and self.recent_hand is not None:
-            return self.recent_frame.hand(self.recent_hand).stabilized_palm_position.to_tuple(), self.recent_frame.hand(self.recent_hand).palm_normal.to_tuple(), self.recent_frame.hand(self.recent_hand).direction.to_tuple()
+        if self.recent_frame is not None and self.recent_hand is not None and not self.recent_frame.hands.is_empty:
+
+            basis_y = self.recent_frame.hand(self.recent_hand).palm_normal.to_tuple()
+            basis_z = self.recent_frame.hand(self.recent_hand).direction.to_tuple()
+            basis_x = np.cross(basis_y, basis_z)
+            
+            return self.recent_frame.hand(self.recent_hand).stabilized_palm_position.to_tuple(), np.array([basis_x, basis_y, basis_z])
         else:
-            return (0,0,0), (0,0,0), (0,0,0)
+            return (0,0,0), np.eye(3)
 
 
 def main():
