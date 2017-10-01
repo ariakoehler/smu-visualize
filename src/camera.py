@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import os
+import os,glob
 
 
 class Cam:
@@ -13,7 +13,7 @@ class Cam:
         self.camera.set(3,self.w)
         self.camera.set(4,self.h)
 
-        self.canvas = np.zeros((self.h,2*self.w,3), np.uint8)
+        self.canvas = np.zeros((self.h,int(self.h*(16.0/9.0)),3), np.uint8)
 
         self.t = 0
 
@@ -29,6 +29,11 @@ class Cam:
         self.calibrate(1)
 
     def calibrate(self,show=False):
+        if show:
+            path = './calibration%d.png'%self.device
+        else:
+            path = './src/calibration%d.png'%self.device
+
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         w = 7
         h = 7
@@ -36,7 +41,10 @@ class Cam:
         board[:,:2] = np.mgrid[0:h,0:w].T.reshape(-1,2)
         board = board.reshape(-1,1,3)
 
-        img = cv2.imread('./src/calibration%d.png'%self.device)
+        if len(glob.glob(path)) == 0:
+            print("calibration file %d does not exist!!!"%self.device)
+            raise ValueError
+        img = cv2.imread(path)
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
         # Find the chess board corners
@@ -87,46 +95,34 @@ class Cam:
         return ret
 
 
-    def view(self):
-        img = self.getFrame()
-        #Draw a cube
-        vertices = [np.array([i,j,k]) for i in [1,3] for j in [1,3] for k in [1,3]]
-        vertices = self.rotateX(vertices,self.t)
-        vertices = self.rotateY(vertices,self.t)
-        vertices = self.rotateZ(vertices,self.t)
-        for i in vertices:
-            for j in vertices:
-                aLine = self.project([i,j])
-                cv2.line(img,aLine[0],aLine[1],(255,0,0),1)
+def main(cams):
+    img = [0,0]
+    img[0] = cams[0].getFrame()
+    #img[1] = cams[1].getFrame()
 
-        self.canvas[:,:self.w] = img
-        self.canvas[:,self.w:] = img
-        self.t += 0.1
-        return self.canvas
-
-def main():
-    theCamera = Cam(1,(320,240))
-    theCamera.calibrate()
-
+    #Draw a cube
+    x = 0
     y = 0
-    while True:
-        img = theCamera.getFrame()
-        #Draw a cube
-        vertices = [[i,j,k] for i in [1,3] for j in [1+y,3+y] for k in [1,3]]
+    z = 0
+    for ii in range(1):
+        vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
+        #vertices = cams[ii].rotateX(vertices,cams[ii].t)
+        #vertices = cams[ii].rotateY(vertices,cams[ii].t)
+        #vertices = cams[ii].rotateZ(vertices,cams[ii].t)
         for i in vertices:
             for j in vertices:
-                aLine = theCamera.project([i,j])
-                cv2.line(img,aLine[0],aLine[1],(255,0,0),2)
+                aLine = cams[ii].project([i,j])
+                cv2.line(img[ii],aLine[0],aLine[1],(255,0,0),1)
+        #cams[ii].t += 0.1
 
-        cv2.imshow('drawing',img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-        #y += 0.05
-
-    theCamera.camera.release()
-    cv2.destroyAllWindows()
+    s = int(cams[0].h*(8.0/9.0))
+    cams[0].canvas[:,:s] = img[0][:,:s]
+    cams[0].canvas[:,s:] = img[0][:,:s]
+    return cams[0].canvas
 
 if __name__ == '__main__':
     #main()
-    theCamera = Cam(0,(320,240))
+    theCamera = Cam(2,(320,240))
+    cameraTwo = Cam(0,(320,240))
     theCamera.calibImage()
+    cameraTwo.calibImage()

@@ -1,6 +1,5 @@
 from flask import Flask, render_template, Response
 import cv2
-import numpy as np
 import sys,os
 
 sys.path.insert(0,os.path.join(os.getcwd(),"./src/"))
@@ -13,9 +12,9 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-def gen(camera):
+def gen(cams):
     while True:
-        frame = camera.view()
+        frame = main(cams)
         ret,jpeg = cv2.imencode('.jpeg',frame)
         yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
@@ -24,7 +23,9 @@ def gen(camera):
 def video_feed():
     theCamera = Cam(0,(320,240))
     theCamera.calibrate()
-    return Response(gen(theCamera),
+    #cameraTwo = Cam(2,(320,240))
+    #cameraTwo.calibrate()
+    return Response(gen([theCamera]),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
