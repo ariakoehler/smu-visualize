@@ -106,11 +106,15 @@ class Cam:
             ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
+
     def newBasis(self,vertices,basis,origin):
         ret = []
-        for i in vertices:
-            ret.append(np.matrix(basis).transpose()*(i-np.asarray(origin)).reshape([3,1]) + np.asarray(origin).reshape([3,1]))
-        return ret
+        basis = np.matrix(basis).transpose()
+        origin = np.asarray(origin).reshape([3,1])
+        for i in range(len(vertices)):
+            scale = float(np.dot(np.asarray(vertices[i]), basis[:,i]))/float(np.dot(basis[:,i].transpose(), basis[:,i]))
+            ret.append(scale * basis[:,i])
+        return np.array(ret)
 
     def drawLine(self,surface,vertices,color,thickness=1,closed=0):
         transformed = self.project(vertices)
@@ -125,7 +129,6 @@ class Cam:
         else:
             print("Data arrays need to be the same length")
             raise KeyboardInterrupt
-
 
 def main(cams):
     img = [0,0]
@@ -144,9 +147,9 @@ def main(cams):
 
         try:
             #Draw axes
-            cams[ii].drawLine(img[ii],[[x-2,y,z],[x+2,y,z]],(0,0,255),1,1)
-            cams[ii].drawLine(img[ii],[[x,y-2,z],[x,y+2,z]],(0,255,0),1,1)
-            cams[ii].drawLine(img[ii],[[x,y,z-2],[x,y,z+2]],(255,0,0),1,1)
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x-2,y,z],[x+2,y,z]],basis,origin),(0,0,255),1,1)
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y-2,z],[x,y+2,z]],basis,origin),(0,255,0),1,1)
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y,z-2],[x,y,z+2]],basis,origin),(255,0,0),1,1)
 
             #Draw some lines or something
             cams[ii].plot(img[ii],[x,y,z],[0,1,2],[0,1,2],[0,1,2],(255,0,255))
@@ -158,9 +161,11 @@ def main(cams):
     cams[0].canvas[:,s:] = img[0][:,:s]
     return cams[0].canvas
 
+                       
 if __name__ == '__main__':
     #main()
     theCamera = Cam(2,(320,240))
     cameraTwo = Cam(0,(320,240))
     theCamera.calibImage()
     cameraTwo.calibImage()
+    
