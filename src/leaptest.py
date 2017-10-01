@@ -28,17 +28,11 @@ class SampleListener(Leap.Listener):
         if len(handlist) is 1 and handlist[0].id is not self.recent_hand:
             self.recent_hand = handlist[0].id
             
-        #if self.recent_frame is not None and self.recent_hand is not None:
-        #    print(self.recent_frame.hand(self.recent_hand).palm_position, self.recent_frame.hand(self.recent_hand).palm_normal)
-        
-        # for hand in handlist:
-        #     print('{}, {}'.format(hand.palm_position, hand.palm_normal))
-
     def get_hand_data(self):
         if self.recent_frame is not None and self.recent_hand is not None:
-            return self.recent_frame.hand(self.recent_hand).palm_position, self.recent_frame.hand(self.recent_hand).palm_normal
+            return self.recent_frame.hand(self.recent_hand).stabilized_palm_position.to_tuple(), self.recent_frame.hand(self.recent_hand).palm_normal.to_tuple(), self.recent_frame.hand(self.recent_hand).direction.to_tuple()
         else:
-            return -1, -1
+            return (0,0,0), (0,0,0), (0,0,0)
 
 
 def main():
@@ -46,6 +40,9 @@ def main():
     controller = Leap.Controller()
 
     controller.add_listener(listener)
+
+    while True:
+        print(listener.get_hand_data())
     
     print('Press enter to quit.')
     try:
