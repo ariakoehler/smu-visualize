@@ -106,12 +106,15 @@ class Cam:
             ret.append((rotation*translated.reshape([3,1])).reshape([1,3])[0] + np.asarray(origin))
         return ret
 
+
     def newBasis(self,vertices,basis,origin):
         ret = []
-        for i in vertices:
-            ret.append(np.matrix(basis).transpose()*(i-np.asarray(origin)).reshape([3,1]) + np.asarray(origin).reshape([3,1]))
-        return ret
-
+        basis = np.matrix(basis).transpose()
+        origin = np.asarray(origin).reshape([3,1])
+        for i in range(len(vertices)):
+            scale = float(np.dot(np.asarray(vertices[i]), basis[:,i]))/float(np.dot(basis[:,i].transpose(), basis[:,i]))
+            ret.append(scale * basis[:,i])
+        return np.array(ret)
 
 def main(cams):
     img = [0,0]
@@ -126,7 +129,7 @@ def main(cams):
     z = 10-(origin[2]/10.0)
     for ii in range(1):
         vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
-        #vertices = cams[ii].newBasis(vertices,basis,origin)
+        vertices = cams[ii].newBasis(vertices,basis,origin)
         for i in vertices:
             for j in vertices:
                 aLine = cams[ii].project([i,j])
@@ -138,9 +141,11 @@ def main(cams):
     cams[0].canvas[:,s:] = img[0][:,:s]
     return cams[0].canvas
 
+                       
 if __name__ == '__main__':
     #main()
     theCamera = Cam(2,(320,240))
     cameraTwo = Cam(0,(320,240))
     theCamera.calibImage()
     cameraTwo.calibImage()
+    
