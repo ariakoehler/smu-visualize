@@ -182,7 +182,7 @@ def main(cams):
                 # cams[ii].plot(img[ii],[x,y,z],[0,3,2],[-2,3,-1],[-3,2,1],(255,0,255))
                 # cams[ii].plot(img[ii],[x,y,z],[0,1,2],[0,-1,2],[0,1,-2],(255,255,255))
             except OverflowError:
-                print "oh shit"
+                print "overflow"
 
     s = int(cams[0].h*(8.0/9.0))
     cams[0].canvas[:,:s] = img[0][:,:s]
