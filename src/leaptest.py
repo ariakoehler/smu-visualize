@@ -17,7 +17,7 @@ class SampleListener(Leap.Listener):
 
     def on_frame(self, controller):
         # Check that frame was retrieved
-        print('Frame available.')
+        #print('Frame available.')
 
         # get new frame and log it in member data
         frame = controller.frame()
@@ -28,15 +28,15 @@ class SampleListener(Leap.Listener):
         if len(handlist) is 1 and handlist[0].id is not self.recent_hand:
             self.recent_hand = handlist[0].id
             
-        if self.recent_frame is not None and self.recent_hand is not None:
-            print(self.recent_frame.hand(self.recent_hand).palm_position, self.recent_frame.hand(self.recent_hand).palm_normal)
+        #if self.recent_frame is not None and self.recent_hand is not None:
+        #    print(self.recent_frame.hand(self.recent_hand).palm_position, self.recent_frame.hand(self.recent_hand).palm_normal)
         
         # for hand in handlist:
         #     print('{}, {}'.format(hand.palm_position, hand.palm_normal))
 
     def get_hand_data(self):
         if self.recent_frame is not None and self.recent_hand is not None:
-            return self.recent_frame.hand(recent_hand).palm_position, self.recent_frame.hand(recent_hand).palm_normal
+            return self.recent_frame.hand(self.recent_hand).palm_position, self.recent_frame.hand(self.recent_hand).palm_normal
         else:
             return -1, -1
 

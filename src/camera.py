@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
-import os,glob
+import os,glob,sys
+from leaptest import SampleListener
+
+sys.path.insert(0,os.path.join(os.getcwd(),'../lib/'))
+
+import Leap
 
 
 class Cam:
@@ -16,6 +21,10 @@ class Cam:
         self.canvas = np.zeros((self.h,int(self.h*(16.0/9.0)),3), np.uint8)
 
         self.t = 0
+
+        self.listener = SampleListener()
+        self.controller = Leap.Controller()
+        self.controller.add_listener(self.listener)
 
     def getFrame(self):
         return self.camera.read()[1]
@@ -101,6 +110,7 @@ def main(cams):
     #img[1] = cams[1].getFrame()
 
     #Draw a cube
+    print(cams[0].listener.get_hand_data())
     x = 0
     y = 0
     z = 0
