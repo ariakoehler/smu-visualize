@@ -116,6 +116,20 @@ class Cam:
             ret.append(scale * basis[:,i])
         return np.array(ret)
 
+    def drawLine(self,surface,vertices,color,thickness=1,closed=0):
+        transformed = self.project(vertices)
+        for vertex in range(len(transformed)-1):
+            cv2.line(surface,transformed[vertex],transformed[vertex+1],color,thickness)
+        if closed:
+            cv2.line(surface,transformed[0],transformed[-1],color,thickness)
+
+    def plot(self,surface,origin,dx,dy,dz,color,thickness=1):
+        if len(dx) == len(dy) == len(dz):
+            self.drawLine(surface,[[dx[i]+origin[0],-dy[i]+origin[1],-dz[i]+origin[2]] for i in range(len(dx))],color,thickness,0)
+        else:
+            print("Data arrays need to be the same length")
+            raise KeyboardInterrupt
+
 def main(cams):
     img = [0,0]
     img[0] = cams[0].getFrame()
@@ -124,17 +138,23 @@ def main(cams):
     #Draw a cube
     origin,basis = cams[0].listener.get_hand_data()
 
-    x = (origin[0]/10.0)
-    y = 10-(origin[1]/10.0)
-    z = 10-(origin[2]/10.0)
+    x = -(origin[0]/10.0)
+    y = (origin[2]/10.0)
+    z = (origin[1]/10.0)-20
     for ii in range(1):
-        vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
-        vertices = cams[ii].newBasis(vertices,basis,origin)
-        for i in vertices:
-            for j in vertices:
-                aLine = cams[ii].project([i,j])
-                cv2.line(img[ii],aLine[0],aLine[1],(255,0,0),1)
-        #cams[ii].t += 0.1
+        #vertices = [np.array([i,j,k]) for i in [x-1,x+1] for j in [y-1,y+1] for k in [z-1,z+1]]
+        #vertices = cams[ii].newBasis(vertices,basis,origin)
+
+        try:
+            #Draw axes
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x-2,y,z],[x+2,y,z]],basis,origin),(0,0,255),1,1)
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y-2,z],[x,y+2,z]],basis,origin),(0,255,0),1,1)
+            cams[ii].drawLine(img[ii],cams[ii].newBasis([[x,y,z-2],[x,y,z+2]],basis,origin),(255,0,0),1,1)
+
+            #Draw some lines or something
+            cams[ii].plot(img[ii],[x,y,z],[0,1,2],[0,1,2],[0,1,2],(255,0,255))
+        except OverflowError:
+            print "oh shit"
 
     s = int(cams[0].h*(8.0/9.0))
     cams[0].canvas[:,:s] = img[0][:,:s]
